@@ -226,31 +226,8 @@ mask = torch.distributions.Bernoulli(probs=(1-p)).sample(x.size())
 x[~mask.bool()] = x.mean()
 out = x * mask * 1/(1-p)
 ```
-## Results
 
-Performance results using only imaging data:
-
-| Outcome | Validation AUC | Test AUC | Epoch |  Model |
-|----------|:--------:|-------:|-----:|---------------------:|
-| DM |  0.89 | 0.89 | 689 | ./data/models/model_dm_689.pth.tar |
-| LRF |    0.77   | 0.77 | 2340 |   ./data/models/model_lrf_2340.pth.tar |
-| OS | 0.80 | 0.67 | 1341 |    ./data/models/model_os_1341.pth.tar |
-
-Performance results using imaging and clinical data:
-
-| Outcome  | Validation AUC | Test AUC | Epoch | Model |
-|----------|:--------:|--------:|-----:|---------------------:|
-| DM |  0.89 | 0.93 | 646 | ./data/models/with_clinical_data/model_dm_cd_646.pth.tar |
-| LRF |    0.70   | 0.59 | 964 |   ./data/models/with_clinical_data/model_lrf_cd_964.pth.tar |
-| OS | 0.74 | 0.69 | 2445 |  ./data/models/with_clinical_data/model_os_cd_2445.pth.tar |
 
 Training set: [HGJ and CHUS](https://doi.org/10.7937/K9/TCIA.2017.8oje5q00)
 Validation set: [HMR and CHUS](https://doi.org/10.7937/K9/TCIA.2017.8oje5q00)
 Testing set: [Maastro](https://doi.org/10.7937/tcia.2019.8kap372n)
-
-For more information check the [publication](https://doi.org/10.1038/s41598-023-45486-5).
-
-## Citation
-
-If you find this code useful for your research, please cite:
-[10.1038/s41598-023-45486-5](https://doi.org/10.1038/s41598-023-45486-5)
