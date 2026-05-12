@@ -22,22 +22,9 @@ In this work, we evaluated the reproducility of proposed Convolutional Neural Ne
 As a result, we developed a less complex network based on previous work, trained and evaluated the performance for outcome prediction (distant metastasis, loco-regional failure and overall survival), and evaluated the impact of pre-processing the CT scans and the model selection method.
 In this repository, you'll find the necessary tools to train/validate/test the proposed model. Additionally, it also includes the necessary tools to reproduce the work by using the same seeds (./seed.xlsx).
 
-‼️In the meantime, we've updated the code and library versions (due to vulnerabilities). To recreate the environment used to train our model, use the docker image `pmateus/hn-cnn:1.4.0` and code version available in the branch `reproduce`.
-
 ## Requirements
 
-To train/validate/test the model you can use docker (the necessary docker images are available) and docker-compose. This avoids the need to configure a local environment and guarantees an equal environment to the one used while developing the network.
-
-Docker images:
-- FSL official image: `vistalab/fsl-v5.0`
-- Custom docker image for pre-processing and training the network: `pmateus/hn-cnn:1.5.0`
-
 It's also possible to configure a local environment without using docker, directly install the necessary dependencies using the `requirements.txt` file.
-
-## Notes
-
-Due to vulnerabilities in the dependencies, we updated the versions starting with release `pmateus/hn-cnn:1.5.0`.
-The information on the original versions and code can be found in the release for version `1.4.0` (and on the branch `reproduce`).
 
 ## Data pre-processing
 
@@ -58,13 +45,6 @@ For step 3, 4, and 5, we provide the script `image_preprocesing/windowing_croppi
 
 The script './training.py' provides the base to train and evaluate the model under different configurations.
 To run the model, make sure to:
-- (Using Docker) Set the path to the data folder and to store the logs and backup in the docker-compose file:
-```yaml
-    volumes:
-      - ./path/to/data:/mnt/data
-      - ./backup_models:/mnt/backup
-      - ./logs:/mnt/logs
-```
 - Set the path for the training, validation, and testing sets in the './training.py' script (check the example script under './example'):
 ```python
 DATA = {
@@ -82,13 +62,6 @@ DATA = {
     }
 }
 ```
-
-### Example
-
-In './example' you can find a small subset of images to test the network training:
-- In the terminal: `docker-compose run hn-cnn`
-- Once in the container's terminal: `cd /mnt`
-- Run the training script: `python3 training.py`
 
 ### Data split
 
@@ -158,8 +131,6 @@ file `parse_data.py`:
 If you change this set, make sure to also modify the number of neurons in the network accordingly (file `cnn.py`).
 
 ## Reproducibility
-
-‼️In the meantime, we've updated the code and library versions (due to vulnerabilities). To recreate the environment used to train our model, use the docker image `pmateus/hn-cnn:1.4.0` and code version available in the branch `reproduce`.
 
 The training scripts allow to set up the necessary seeds in order to make the results fully reproducible:
 - the random seed for python (`random.seed()`)
