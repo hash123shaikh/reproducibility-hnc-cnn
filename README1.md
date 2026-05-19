@@ -12,7 +12,13 @@ Independent assessment of reproducibility and external validation of image-based
 - [Requirements](#requirements)
 - [Data Pre-processing](#data-pre-processing)
 - [Running the Model](#running-the-model)
-- [Results](#results)
+  - [Data Configuration](#data-configuration)
+  - [Model Architectures](#model-architectures)
+  - [Validation Strategies](#validation-strategies)
+  - [Training Scripts](#training-scripts)
+  - [Data Split](#data-split)
+  - [Training](#training)
+  - [Clinical Data](#clinical-data)
 - [Citation](#citation)
 
 ---
@@ -120,7 +126,7 @@ pip install -r requirements.txt
 # Run preprocessing
 python scripts/preprocessing/windowing_cropping.py
 
-# Train model (example: Distant Metastasis)
+# Train model (example: Distant Metastasis with 5-fold CV)
 python scripts/training/training_dm.py
 ```
 
@@ -203,6 +209,74 @@ python scripts/training/training_os_cd.py    # imaging + clinical
 
 ---
 
+### Data Split
+
+In this work, we followed the same data split as previous studies. In this strategy, two cohorts are used for training, two for validation, and one exclusively for external validation. To train the model following this method, configure the `DATA_SPLIT` parameter with `COHORT_SPLIT`.
+
+The cohort for training and validation are part of the [Head-Neck-PET-CT dataset](https://doi.org/10.7937/K9/TCIA.2017.8oje5q00).
+
+The dataset [HEAD-NECK-RADIOMICS-HN1](https://doi.org/10.7937/tcia.2019.8kap372n) from Maastro was used exclusively for external validation.
+
+Additionally, we evaluated the uncertainty of the model with a 5-fold cross validation strategy. To train the model following this method, configure the `DATA_SPLIT` parameter with `CROSS_VALIDATION`.
+
+### Training
+
+The current implementation allows to train and evaluate 3 different models:
+- A convolutional neural network (set the `Model` parameter in the configuration to `CNN`)
+- An artificial neural network (set the `Model` parameter in the configuration to `ANN`)
+- A logistic regression (set the `Model` parameter in the configuration to `LR`)
+
+These models can be evaluated by splitting the data following the `COHORT_SPLIT` or cross validation (check previous section).
+
+The additional parameters available are described below:
+- `FOLDS`: Number of folds to use when performing cross validation
+- `TIME_TO_EVENT`: The minimum observation period for a non-event to be included in the training
+- `EVENT`: Event that the network will predict (`DM` - Distant Metastasis, `LRF` - Local-Regional Failure, `OS` - Survival)
+- `HYPERPARAMETERS`: Set of hyperparameters to change from the default ones (check below)
+- `BATCH_SIZE`: the batch size
+- `LOGS_PATH`: Path to store the logs and metrics
+- `CLINICAL_VARIABLES`: State the clinical variables that will be included when training the model
+- `DATA_AUGMENTATION`: Data augmentation techniques to apply
+
+Regarding the hyperparameters employed:
+- `LEARNING_RATE`: the learning rate (default: 0.05)
+- `EPOCHS`: number of epochs
+- `MOMENTUM`: momentum
+- `DAMPENING`: dampening (default: 0.00)
+- `RELU_SLOPE`: slope for the RELU function (default: 0.10)
+- `WEIGHTS_DECAY`: weight decay (L2 penalty) (default: 0.0001)
+- `OPTIMIZER`: optimizer used, default: SGD - https://pytorch.org/docs/stable/generated/torch.optim.SGD.html
+- `CLASS_WEIGHTS`: weights for each class in the loss function (default: [0.7, 3.7])
+
+Regarding the data augmentation techniques:
+- `HORIZONTAL_FLIP`: by default a probability of 0.5
+- `VERTICAL_FLIP`: by default a probability of 0.5
+- `ROTATE_90`: randomly rotate the image 90 degrees 1-3 times, by default a probability of 0.75
+- `ROTATION`: randomly rotate the image a certain number of degrees, by default maximum 10 degrees
+
+To store the model, include the following parameters:
+- `MODEL_ID`: will be used for the file name in combination with the epoch number
+- `MODEL_PATH`: the path for the folder to store the models
+- `THRESHOLD`: (optional) Stores the model if the AUC for the validation set is above this value
+- `MAX_DIFFERENCE`: (optional) Stores the model if the difference between the training and validation AUC is below this value
+
+### Clinical Data
+
+The clinical variables currently considered can be checked in the file `hn_cnn/parse_data.py`.
+The dictionary `CLINICAL_DATA` identifies the necessary variables and the values used across the different datasets.
+This information is used to harmonize the datasets before training the network.
+
+The clinical information considered: primary site, T-stage, N-stage, TNM-stage, HPV (human papillomavirus) status, volume, and area of the tumour.
+
+Currently, the clinical variables included in the model (when setting `CLINICAL_VARIABLES` to `True`) are pre-set in the file `hn_cnn/parse_data.py`:
+```python
+features = tabular[["n0", "n1", "n2", "t1", "t2", "t3", "t4", "vol0", "vol1", "vol2", "vol3"]]
+``` 
+
+If you change this set, make sure to also modify the number of neurons in the network accordingly (file `hn_cnn/cnn.py`).
+
+---
+
 ## Citation
 
 If you use this code or findings in your research, please cite:
@@ -248,16 +322,6 @@ This project is licensed under the MIT License - see [LICENSE](LICENSE) file for
 - **Hasan Shaikh** - [GitHub](https://github.com/hash123shaikh)
 - **Dr. Hannah Mary Thomas T** - hannah.thomas@cmcvellore.ac.in
 - **Institution:** Quantitative Imaging Research and AI Lab, Christian Medical College, Vellore, India
-
----
-
-## Contributing
-
-We welcome contributions! If you find issues or have suggestions for improvements, please:
-1. Open an issue describing the problem
-2. Fork the repository
-3. Create a feature branch
-4. Submit a pull request
 
 ---
 
