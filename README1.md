@@ -366,7 +366,7 @@ out = x * mask * 1/(1-p)
 If you use this code or findings in your research, please cite:
 
 ```bibtex
-[Your paper citation - to be added after publication]
+[Our paper citation - to be added after publication]
 ```
 
 **And the original study:**
