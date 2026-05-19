@@ -69,8 +69,6 @@ In this work, we followed the same data split as previous studies. In this strat
 The cohort for training and validation are part of the [Head-Neck-PET-CT dataset](https://doi.org/10.7937/K9/TCIA.2017.8oje5q00).
 The dataset [HEAD-NECK-RADIOMICS-HN1](https://doi.org/10.7937/tcia.2019.8kap372n) from Maastro was used exclusively for external validation.
 
-![Data split based on the cohorts available](/censored_data.png)
-
 Additionally, we evaluated the uncertainity of the model with a 5-fold cross validation strategy. To train the model following this method, configure the `DATA_SPLIT` parameter with `CROSS_VALIDATION`.
 
 ### Training
