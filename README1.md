@@ -31,7 +31,7 @@ We performed:
 
 ## Study Design
 
-![Study Design](Figure_1.png)
+![Study Design](dual-framework_compliance_assessment.png)
 
 **Figure 1.** Overview of the independent reproduction effort showing exact reproducibility (using original datasets and code), conceptual reproducibility (external validation on CMC cohort), and dual-framework compliance assessment (CLAIM and TRIPOD+AI).
 
@@ -200,51 +200,6 @@ python scripts/training/training_os_cd.py    # imaging + clinical
 ```
 
 **Training time:** ~17-19 hours per outcome (5-fold CV), ~7GB peak memory usage
-
----
-
-## Results
-
-### Exact Reproduction - Test Set Performance
-
-Comparison of original vs reproduced AUC values on external test set (Dutch/MAASTRO dataset):
-
-| Outcome | Model Type | Original AUC | Reproduced AUC | Δ AUC |
-|---------|-----------|--------------|----------------|-------|
-| **Distant Metastasis (2y)** | | | | |
-| | Clinical Only | 0.87 [0.78, 0.95] / 0.86 (0.81–0.89) | 0.87 [0.78, 0.94] / 0.86 (0.78–0.88) | 0.00 / 0.00 |
-| | Imaging Only | 0.89 [0.79, 0.98] / 0.83 (0.76–0.90) | 0.87 [0.67, 0.99] / 0.79 (0.74–0.85) | −0.02 / −0.04 |
-| | Clinical + Imaging | 0.93 [0.86, 0.99] / 0.88 (0.86–0.90) | 0.92 [0.86, 0.98] / 0.87 (0.85–0.88) | −0.01 / −0.01 |
-| **Locoregional Failure (2y)** | | | | |
-| | Clinical Only | 0.41 [0.29, 0.54] / 0.53 (0.50–0.54) | 0.33 [0.23, 0.44] / 0.40 (0.30–0.51) | −0.08 / −0.13 |
-| | Imaging Only | 0.45 [0.32, 0.57] / 0.53 (0.48–0.59) | 0.49 [0.36, 0.62] / 0.56 (0.54–0.57) | +0.04 / +0.03 |
-| | Clinical + Imaging | 0.59 [0.47, 0.70] / 0.57 (0.53–0.60) | 0.57 [0.44, 0.68] / 0.40 (0.28–0.51) | −0.02 / −0.17 |
-| **Overall Survival (4y)** | | | | |
-| | Clinical Only | 0.69 [0.58, 0.79] / 0.63 (0.56–0.68) | 0.65 [0.55, 0.76] / 0.60 (0.56–0.62) | −0.04 / −0.03 |
-| | Imaging Only | 0.67 [0.57, 0.77] / 0.63 (0.57–0.72) | 0.67 [0.56, 0.76] / 0.71 (0.67–0.75) | 0.00 / +0.08 |
-| | Clinical + Imaging | 0.69 [0.59, 0.79] / 0.68 (0.63–0.71) | 0.69 [0.59, 0.79] / 0.60 (0.57–0.64) | 0.00 / −0.08 |
-
-*Format: Cohort split [95% CI] / 5-fold CV (95% CI)*
-
----
-
-### External Validation on CMC Cohort (n=102)
-
-Conceptual reproducibility results for **Locoregional Failure (2-year)** on independent Indian cohort:
-
-| Model Type | Train | Validation | **Test** |
-|------------|-------|------------|----------|
-| **Clinical Only (ANN)** | | | |
-| Cohort split | 0.86 [0.78, 0.92] | 0.49 [0.33, 0.65] | **0.49 [0.37, 0.60]** |
-| 5-fold CV | 0.78 (0.69–0.86) | 0.69 (0.46–0.90) | **0.51 (0.40–0.61)** |
-| **Imaging Only (CNN)** | | | |
-| Cohort split | 0.71 [0.56, 0.84] | 0.72 [0.53, 0.88] | **0.54 [0.43, 0.66]** |
-| 5-fold CV | 0.78 (0.71–0.81) | 0.79 (0.74–0.82) | **0.56 (0.54–0.59)** |
-| **Clinical + Imaging (CNN)** | | | |
-| Cohort split | 0.75 [0.64, 0.86] | 0.70 [0.53, 0.85] | **0.59 [0.48, 0.70]** |
-| 5-fold CV | 0.90 (0.88–0.92) | 0.88 (0.87–0.88) | **0.56 (0.53–0.60)** |
-
-**Key observation:** Performance degradation on external validation compared to original test set (AUC 0.49-0.59 vs original 0.71-0.79), likely due to different tumor site distribution and higher event rates in the CMC cohort.
 
 ---
 
