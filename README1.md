@@ -277,6 +277,90 @@ If you change this set, make sure to also modify the number of neurons in the ne
 
 ---
 
+## Reproducibility
+
+The training scripts allow setting up the necessary seeds to make results fully reproducible:
+- Random seed for Python (`random.seed()`)
+- Random seed for data split, necessary when performing cross-validation (`StratifiedKFold`)
+- Random seed for PyTorch library (`torch.manual_seed()`)
+
+When reproducing the results from our manuscript, seeds are provided in `data/seeds.xlsx`. Include the following in your training script:
+
+```python
+import random
+import torch
+
+random.seed(seed_value)  # From seeds.xlsx
+random_seed_split = random.randint(0, 9174937)
+torch.manual_seed(seed_value)  # From seeds.xlsx
+```
+
+The scripts in `scripts/training/` already include all necessary configurations to reproduce our results for each outcome.
+
+### Hardware-Dependent Numerical Variations
+
+We trained our models on **Ubuntu 24.04 LTS** with **NVIDIA Quadro RTX 5000 GPUs** at Christian Medical College, Vellore. Although we provide seeds and scripts for reproduction, inconsistencies may occur on different hardware architectures.
+
+We observed that some systems produce different results when executing the `torch.nn.Dropout` function, even with identical seeds. From experiments across different machines, we believe this is caused by CPU architecture differences:
+
+```python
+import random
+import torch
+
+random.seed(7651962)
+random_seed_split = random.randint(0, 9174937)
+torch.manual_seed(775135)
+
+# Consistent across architectures:
+data = torch.randn(4, 4)
+
+# Architecture-dependent results:
+dp1 = torch.nn.Dropout(p=0.3)
+dp1(data)
+
+# x86-64 architecture (our system):
+# tensor([[-1.0361, -0.0000, -0.0000,  1.8477],
+#         [-2.0117, -1.2687, -0.0785,  0.0000],
+#         [-0.0000, -2.3690, -0.0955, -0.0000],
+#         [-0.4844,  1.5011,  1.8367,  2.3154]])
+
+# vs ARM architecture:
+# tensor([[-1.0361, -3.5810, -1.1379,  1.8477],
+#         [-0.0000, -1.2687, -0.0000,  1.7217],
+#         [-1.4952, -2.3690, -0.0955, -0.0000],
+#         [-0.4844,  1.5011,  1.8367,  2.3154]])
+```
+
+Setting the following configurations did **not** resolve the architecture-dependent behavior:
+
+```python
+device = torch.device("cpu")
+torch.backends.cudnn.deterministic = True
+torch.set_num_threads(1)
+```
+
+**Alternative:** To avoid this issue entirely, you can implement a deterministic dropout:
+
+```python
+x = torch.ones(10, 20)
+p = 0.5
+mask = torch.distributions.Bernoulli(probs=(1-p)).sample(x.size())
+x[~mask.bool()] = x.mean()
+out = x * mask * 1/(1-p)
+```
+
+### Datasets Used
+
+**Original Study (Exact Reproduction):**
+- Training set: [HGJ and CHUS](https://doi.org/10.7937/K9/TCIA.2017.8oje5q00) - Canadian Head-Neck-PET-CT dataset
+- Validation set: [HMR and CHUM](https://doi.org/10.7937/K9/TCIA.2017.8oje5q00) - Canadian Head-Neck-PET-CT dataset
+- External test set: [MAASTRO](https://doi.org/10.7937/tcia.2019.8kap372n) - Dutch HEAD-NECK-RADIOMICS-HN1 dataset
+
+**Conceptual Reproducibility (Our External Validation):**
+- External validation set: CMC Vellore, India (n=102) - Private dataset, access restricted
+
+---
+
 ## Citation
 
 If you use this code or findings in your research, please cite:
