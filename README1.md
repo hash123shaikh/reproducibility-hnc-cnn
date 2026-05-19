@@ -7,11 +7,11 @@ Independent assessment of reproducibility and external validation of image-based
 
 ## Table of Contents
 - [Description](#description)
+- [Study Design](#study-design)
 - [Key Findings](#key-findings)
 - [Requirements](#requirements)
 - [Data Pre-processing](#data-pre-processing)
 - [Running the Model](#running-the-model)
-- [Reproducibility Barriers Documented](#reproducibility-barriers-documented)
 - [Results](#results)
 - [Citation](#citation)
 
@@ -27,28 +27,23 @@ We performed:
 2. **Conceptual reproduction** - External validation on a geographically distinct cohort (CMC Vellore, India, n=102)
 3. **Dual-framework compliance assessment** - Evaluated the original study against CLAIM and TRIPOD+AI reporting guidelines
 
-Despite the original study's 95% CLAIM compliance and publicly available code, we encountered **7 distinct barriers** requiring **7 weeks** to resolve. This work demonstrates that code availability and reporting checklist compliance alone do not guarantee independent reproducibility.
+---
+
+## Study Design
+
+![Study Design](Figure_1.png)
+
+**Figure 1.** Overview of the independent reproduction effort showing exact reproducibility (using original datasets and code), conceptual reproducibility (external validation on CMC cohort), and dual-framework compliance assessment (CLAIM and TRIPOD+AI).
 
 ---
 
 ## Key Findings
 
-### Reproducibility Challenges
-- ✅ **Exact reproduction achieved** with AUC differences ranging from –0.22 to +0.10
-- ⚠️ **7 barriers identified** across all pipeline stages (data loading, preprocessing, training, evaluation)
-- 🐛 **Critical preprocessing bug discovered** - slice selection algorithm selected by total pixel count rather than tumor content, affecting ~40% of training data
-- ⏱️ **7 weeks resolution time** required through author communication and code modifications
-- 📋 **Documentation gaps** found despite 95% CLAIM compliance
-
-### External Validation
-- 📊 **Performance degradation** observed on Indian cohort (AUC 0.54-0.59 vs original 0.71-0.79)
-- 🌍 **Population differences** - Higher laryngeal representation (54% vs 15-35%), different event rates (43.1% vs 14.4-24.8%)
-- ✅ **Preprocessing pipeline validated** on 102 CMC patients with 100% success rate
-
-### Dual-Framework Assessment
-- 📝 **CLAIM score**: 86% (independent assessment) vs 95% (self-reported)
-- 📝 **TRIPOD+AI score**: 77%
-- 🔍 **Complementary coverage** - CLAIM focused on technical details, TRIPOD+AI on clinical deployment
+- ✅ **Exact reproduction achieved** - Results comparable to original (AUC differences: –0.22 to +0.10)
+- 🐛 **Preprocessing bug discovered** - Slice selection algorithm corrected, improving success rate from 60% to 100%
+- ⚠️ **7 barriers encountered** - Required 7 weeks to resolve through author communication and code modifications
+- 📊 **External validation** - Performance degradation observed on Indian cohort (AUC 0.54-0.59 vs original 0.71-0.79)
+- 📋 **Dual-framework assessment** - CLAIM: 86% vs 95% (self-reported); TRIPOD+AI: 77%
 
 ---
 
@@ -75,8 +70,6 @@ pip install -r requirements.txt
 - Pillow 10.3.0
 - nibabel 3.2.1
 - dcmrtstruct2nii 1.0.19
-
-For complete environment setup, see [installation guide](docs/reproduction_guide.md).
 
 ---
 
@@ -152,95 +145,106 @@ DATA = {
 }
 ```
 
-### Training Options
+### Model Architectures
 
-**Models available:**
-- CNN (Convolutional Neural Network) - Imaging only
-- ANN (Artificial Neural Network) - Clinical data only
-- CNN + ANN - Combined imaging and clinical data
+Three model types are available:
 
-**Validation strategies:**
-- `COHORT_SPLIT` - Center-based partitioning (2 centers train, 2 validate, 1 external test)
-- `CROSS_VALIDATION` - 5-fold stratified cross-validation
+1. **ANN (Clinical Only)** - Artificial Neural Network using only clinical variables
+   - Input: 11 clinical features (T-stage, N-stage, tumor volume - one-hot encoded)
+   - Architecture: 4 fully connected layers
 
-**Outcomes supported:**
-- `DM` - Distant Metastasis (2-year)
-- `LRF` - Locoregional Failure (2-year)
-- `OS` - Overall Survival (4-year)
+2. **CNN (Imaging Only)** - Convolutional Neural Network using only CT images
+   - Input: 180×180 pixel cropped CT images
+   - Architecture: 3 convolutional blocks + 4 fully connected layers
+
+3. **CNN + Clinical** - Combined model using both imaging and clinical data
+   - Input: CT images + 11 clinical features
+   - Architecture: CNN feature extraction + clinical data fusion
+
+### Validation Strategies
+
+**Cohort Split Approach:**
+- Training: 2 Canadian centers (HGJ, CHUS)
+- Validation: 2 Canadian centers (HMR, CHUM)
+- External Test: Dutch dataset (MAASTRO)
+
+**5-Fold Cross-Validation:**
+- Stratified k-fold on full Canadian dataset
+- External Test: Dutch dataset (MAASTRO)
 
 ### Training Scripts
 
+Training scripts follow this naming convention:
+- `training_{outcome}.py` = 5-fold cross-validation, **imaging only**
+- `training_{outcome}_cd.py` = Cohort split, **imaging + clinical data**
+
+where `{outcome}` is:
+- `dm` - Distant Metastasis (2-year)
+- `lrf` - Locoregional Failure (2-year)  
+- `os` - Overall Survival (4-year)
+
+**Examples:**
+
 ```bash
 # Distant Metastasis
-python scripts/training/training_dm.py      # 5-fold CV
-python scripts/training/training_dm_cd.py   # Cohort split
+python scripts/training/training_dm.py       # imaging only
+python scripts/training/training_dm_cd.py    # imaging + clinical
 
 # Locoregional Failure
-python scripts/training/training_lrf.py     # 5-fold CV
-python scripts/training/training_lrf_cd.py  # Cohort split
+python scripts/training/training_lrf.py      # imaging only
+python scripts/training/training_lrf_cd.py   # imaging + clinical
 
 # Overall Survival
-python scripts/training/training_os.py      # 5-fold CV
-python scripts/training/training_os_cd.py   # Cohort split
+python scripts/training/training_os.py       # imaging only
+python scripts/training/training_os_cd.py    # imaging + clinical
 ```
 
-**Expected training time:** ~17-19 hours per outcome (5-fold CV), ~7GB peak memory
-
----
-
-## Reproducibility Barriers Documented
-
-We systematically documented all 7 barriers encountered during reproduction:
-
-| ID | Barrier | Stage | Resolution Time |
-|----|---------|-------|-----------------|
-| B1 | Column name mismatch | Data loading | 2 weeks |
-| B2 | Incorrect slice selection | Preprocessing | 2 weeks |
-| B3 | Unclear epoch selection | Training | 4 days |
-| B4 | Missing pre-trained weights location | Training | 2 days |
-| B5 | Cross-validation results overwriting | Evaluation | 1 day |
-| B6 | Bootstrap CI implementation missing | Evaluation | 1 week |
-| B7 | Hardware-dependent numerical variation | Evaluation | 1 week |
-
-**Total resolution time:** ~7 weeks
-
-For detailed documentation of each barrier, resolution approach, and impact on reproducibility, see [barriers_documentation.md](docs/barriers_documentation.md).
+**Training time:** ~17-19 hours per outcome (5-fold CV), ~7GB peak memory usage
 
 ---
 
 ## Results
 
-### Exact Reproduction Comparison
+### Exact Reproduction - Test Set Performance
 
-| Outcome | Model Type | Original AUC (Test) | Reproduced AUC (Test) | Δ AUC |
-|---------|-----------|---------------------|----------------------|-------|
-| DM (2y) | Clinical Only | 0.87 | 0.87 | 0.00 |
-| DM (2y) | Imaging Only | 0.89 | 0.87 | -0.02 |
-| DM (2y) | Clinical + Imaging | 0.93 | 0.92 | -0.01 |
-| LRF (2y) | Clinical Only | 0.41 | 0.33 | -0.08 |
-| LRF (2y) | Imaging Only | 0.45 | 0.49 | +0.04 |
-| LRF (2y) | Clinical + Imaging | 0.59 | 0.57 | -0.02 |
-| OS (4y) | Clinical Only | 0.69 | 0.65 | -0.04 |
-| OS (4y) | Imaging Only | 0.67 | 0.67 | 0.00 |
-| OS (4y) | Clinical + Imaging | 0.69 | 0.69 | 0.00 |
+Comparison of original vs reproduced AUC values on external test set (Dutch/MAASTRO dataset):
 
-*Results shown for cohort split approach*
+| Outcome | Model Type | Original AUC | Reproduced AUC | Δ AUC |
+|---------|-----------|--------------|----------------|-------|
+| **Distant Metastasis (2y)** | | | | |
+| | Clinical Only | 0.87 [0.78, 0.95] / 0.86 (0.81–0.89) | 0.87 [0.78, 0.94] / 0.86 (0.78–0.88) | 0.00 / 0.00 |
+| | Imaging Only | 0.89 [0.79, 0.98] / 0.83 (0.76–0.90) | 0.87 [0.67, 0.99] / 0.79 (0.74–0.85) | −0.02 / −0.04 |
+| | Clinical + Imaging | 0.93 [0.86, 0.99] / 0.88 (0.86–0.90) | 0.92 [0.86, 0.98] / 0.87 (0.85–0.88) | −0.01 / −0.01 |
+| **Locoregional Failure (2y)** | | | | |
+| | Clinical Only | 0.41 [0.29, 0.54] / 0.53 (0.50–0.54) | 0.33 [0.23, 0.44] / 0.40 (0.30–0.51) | −0.08 / −0.13 |
+| | Imaging Only | 0.45 [0.32, 0.57] / 0.53 (0.48–0.59) | 0.49 [0.36, 0.62] / 0.56 (0.54–0.57) | +0.04 / +0.03 |
+| | Clinical + Imaging | 0.59 [0.47, 0.70] / 0.57 (0.53–0.60) | 0.57 [0.44, 0.68] / 0.40 (0.28–0.51) | −0.02 / −0.17 |
+| **Overall Survival (4y)** | | | | |
+| | Clinical Only | 0.69 [0.58, 0.79] / 0.63 (0.56–0.68) | 0.65 [0.55, 0.76] / 0.60 (0.56–0.62) | −0.04 / −0.03 |
+| | Imaging Only | 0.67 [0.57, 0.77] / 0.63 (0.57–0.72) | 0.67 [0.56, 0.76] / 0.71 (0.67–0.75) | 0.00 / +0.08 |
+| | Clinical + Imaging | 0.69 [0.59, 0.79] / 0.68 (0.63–0.71) | 0.69 [0.59, 0.79] / 0.60 (0.57–0.64) | 0.00 / −0.08 |
 
-### External Validation (CMC Cohort, n=102)
-
-| Model Type | AUC (Cohort Split) | AUC (5-fold CV) |
-|------------|-------------------|-----------------|
-| Clinical Only | 0.49 [0.37, 0.60] | 0.51 (0.40–0.61) |
-| Imaging Only | 0.54 [0.43, 0.66] | 0.56 (0.54–0.59) |
-| **Clinical + Imaging** | **0.59 [0.48, 0.70]** | 0.56 (0.53–0.60) |
+*Format: Cohort split [95% CI] / 5-fold CV (95% CI)*
 
 ---
 
-## Documentation
+### External Validation on CMC Cohort (n=102)
 
-- **[Reproduction Guide](docs/reproduction_guide.md)** - Step-by-step instructions for reproducing our work
-- **[Barriers Documentation](docs/barriers_documentation.md)** - Detailed analysis of all 7 reproducibility barriers
-- **[Preprocessing Pipeline](docs/preprocessing_pipeline.md)** - Complete preprocessing workflow with corrected slice selection
+Conceptual reproducibility results for **Locoregional Failure (2-year)** on independent Indian cohort:
+
+| Model Type | Train | Validation | **Test** |
+|------------|-------|------------|----------|
+| **Clinical Only (ANN)** | | | |
+| Cohort split | 0.86 [0.78, 0.92] | 0.49 [0.33, 0.65] | **0.49 [0.37, 0.60]** |
+| 5-fold CV | 0.78 (0.69–0.86) | 0.69 (0.46–0.90) | **0.51 (0.40–0.61)** |
+| **Imaging Only (CNN)** | | | |
+| Cohort split | 0.71 [0.56, 0.84] | 0.72 [0.53, 0.88] | **0.54 [0.43, 0.66]** |
+| 5-fold CV | 0.78 (0.71–0.81) | 0.79 (0.74–0.82) | **0.56 (0.54–0.59)** |
+| **Clinical + Imaging (CNN)** | | | |
+| Cohort split | 0.75 [0.64, 0.86] | 0.70 [0.53, 0.85] | **0.59 [0.48, 0.70]** |
+| 5-fold CV | 0.90 (0.88–0.92) | 0.88 (0.87–0.88) | **0.56 (0.53–0.60)** |
+
+**Key observation:** Performance degradation on external validation compared to original test set (AUC 0.49-0.59 vs original 0.71-0.79), likely due to different tumor site distribution and higher event rates in the CMC cohort.
 
 ---
 
