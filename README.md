@@ -3,6 +3,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.10](https://img.shields.io/badge/python-3.10-blue.svg)](https://www.python.org/downloads/)
 [![PyTorch 1.13](https://img.shields.io/badge/pytorch-1.13.1-ee4c2c.svg)](https://pytorch.org/)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.24467343.svg)](https://doi.org/10.5281/zenodo.24467343)
 
 This repository contains the code, data, trained models, logs and results needed to reproduce our **independent reproducibility study** of:
 
