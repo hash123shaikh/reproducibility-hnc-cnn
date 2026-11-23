@@ -7,7 +7,8 @@ abstract: >-
   statistical reproduction and external validation of the head and neck cancer
   prognostic models of Mateus et al. (2023), including a CLAIM and TRIPOD+AI
   reporting audit.
-version: 1.0.0
+version: 1.0.1
+date-released: "2026-11-23"
 license: MIT
 repository-code: "https://github.com/qirail/reproducibility-hnc-cnn"
 keywords:
